@@ -1,10 +1,19 @@
-<<<<<<< HEAD
-# contador-numeros-display-bitdoglab
-=======
+
 # Projeto: Interface de Comunicação Serial no RP2040 com BitDogLab
 
 ## Descrição
 Este projeto tem como objetivo explorar as interfaces de comunicação serial no microcontrolador RP2040 utilizando a placa de desenvolvimento BitDogLab. Ele combina hardware e software para manipulação de LEDs, entrada de caracteres via UART e interação com botões.
+
+## Entrega
+### 1. Código-Fonte
+O código do projeto está disponível neste repositório, <ws2812.c>
+
+### 2. Vídeo de Demonstração
+Um vídeo demonstrativo foi produzido, contendo:
+- Apresentação do autor.
+- Explicação das funcionalidades implementadas.
+- Demonstração do projeto em funcionamento.
+- [Link para o vídeo](https://drive.google.com/file/d/1ye-VUXsxcI4JKlpr7O4Vb30_GMAE5QGZ/view?usp=drivesdk)
 
 ## Objetivos
 - Compreender o funcionamento da comunicação serial (UART e I2C) em microcontroladores.
@@ -46,20 +55,8 @@ Este projeto tem como objetivo explorar as interfaces de comunicação serial no
 - **Envio de dados pela UART** para comunicação com o PC.
 - **Código bem estruturado e comentado**.
 
-## Entrega
-### 1. Código-Fonte
-O código do projeto está disponível neste repositório, contendo todos os arquivos necessários para sua execução.
-
-### 2. Vídeo de Demonstração
-Um vídeo demonstrativo foi produzido, contendo:
-- Apresentação do autor.
-- Explicação das funcionalidades implementadas.
-- Demonstração do projeto em funcionamento.
-- [Link para o vídeo](INSERIR_LINK_AQUI)
-
 ## Considerações Finais
 Este projeto proporciona uma excelente oportunidade para consolidar conhecimentos em programação de microcontroladores, manipulação de hardware e desenvolvimento de interfaces de comunicação. O código foi estruturado para facilitar a compreensão e manutenção.
 
 **Boa sorte e bom desenvolvimento!**
 
->>>>>>> 0a206ef0f20db0775705085a36450724c40405c6
