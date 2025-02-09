@@ -33,9 +33,14 @@ volatile uint32_t ultimo_estado_b = 0;
 
 int estado_led_verde = 0;
 int estado_led_azul = 0;
+ssd1306_t ssd; // Inicializa a estrutura do display
+
+bool cor = true;
+char c = '0';  // Caracter '0'
+int num = 10;
 
 // Buffer para números na matriz (0 a 9)
-bool numeros[10][NUM_PIXELS] = {
+bool numeros[11][NUM_PIXELS] = {
     { // Zero
         0, 1, 1, 1, 0,
         0, 1, 0, 1, 0,
@@ -105,6 +110,13 @@ bool numeros[10][NUM_PIXELS] = {
         0, 1, 1, 1, 0,
         0, 1, 0, 1, 0,
         0, 1, 1, 1, 0
+    },
+    { // Dez (apagado)
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0
     }
 };
 
@@ -124,29 +136,45 @@ void display_numeros(int numero) {
     }
 }
 
+void display_estado_leds() {
+    // Atualiza o display para refletir o estado dos LEDs
+    ssd1306_fill(&ssd, false);  // Limpa o display
+    if (estado_led_verde == 0) {
+        ssd1306_draw_string(&ssd, "LED V   OFF", 15, 10);  // Exibe mensagem
+    } else {
+        ssd1306_draw_string(&ssd, "LED V   ON", 15, 10);  // Exibe mensagem
+    }
+    
+    if (estado_led_azul == 0) {
+        ssd1306_draw_string(&ssd, "LED A   OFF", 15, 20);  // Exibe mensagem
+    } else {
+        ssd1306_draw_string(&ssd, "LED A   ON", 15, 20);  // Exibe mensagem
+    }
+
+    ssd1306_send_data(&ssd);  // Atualiza o display
+    printf("Estado LED Verde: %s, LED Azul: %s\n", 
+           estado_led_verde == 0 ? "OFF" : "ON", 
+           estado_led_azul == 0 ? "OFF" : "ON");  // Envia para o Serial Monitor
+}
+
 void gpio_irq_handler(uint gpio, uint32_t events) {
     uint32_t current_time = to_us_since_boot(get_absolute_time());
     if (gpio == BUTTON_A && current_time - ultimo_estado_a > intervalo_micro) {
         ultimo_estado_a = current_time;
         estado_led_verde = !estado_led_verde;
-        if(estado_led_verde == 0){
-            gpio_put(LED_RGB_G, 0);
-        } else{
-            gpio_put(LED_RGB_G, 1);
-        }
+        gpio_put(LED_RGB_G, estado_led_verde);  // Atualiza o estado do LED Verde
+        display_estado_leds();  // Atualiza o display com o estado atual dos LEDs
     }
     if (gpio == BUTTON_B && current_time - ultimo_estado_b > intervalo_micro) {
         ultimo_estado_b = current_time;
         estado_led_azul = !estado_led_azul;
-        if(estado_led_azul == 0){
-            gpio_put(LED_RGB_B, 0);
-        } else{
-            gpio_put(LED_RGB_B, 1);
-        }
+        gpio_put(LED_RGB_B, estado_led_azul);  // Atualiza o estado do LED Azul
+        display_estado_leds();  // Atualiza o display com o estado atual dos LEDs
     }
 }
 
 int main() {
+
     // I2C Initialisation. Using it at 400Khz.
     i2c_init(I2C_PORT, 400 * 1000);
     
@@ -154,16 +182,14 @@ int main() {
     gpio_set_function(I2C_SCL, GPIO_FUNC_I2C); // Set the GPIO pin function to I2C
     gpio_pull_up(I2C_SDA); // Pull up the data line
     gpio_pull_up(I2C_SCL); // Pull up the clock line
-    ssd1306_t ssd; // Inicializa a estrutura do display
+
     ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT); // Inicializa o display
     ssd1306_config(&ssd); // Configura o display
     ssd1306_send_data(&ssd); // Envia os dados para o display
-
-    // Limpa o display. O display inicia com todos os pixels apagados.
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
-    
-    bool cor = true;
+    ssd1306_fill(&ssd, !cor); // Limpa o display
+    ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo    
 
     stdio_init_all();
     gpio_init(LED_RGB_R); gpio_set_dir(LED_RGB_R, GPIO_OUT);
@@ -178,19 +204,22 @@ int main() {
     uint offset = pio_add_program(pio, &ws2812_program);
     ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, IS_RGBW);
     
-    display_numeros(numero_atual);
-
+    display_estado_leds();
     while (1) {
         cor = !cor;
-        // Atualiza o conteúdo do display com animações
-        ssd1306_fill(&ssd, !cor); // Limpa o display
-        ssd1306_rect(&ssd, 3, 3, 122, 58, cor, !cor); // Desenha um retângulo
-        ssd1306_draw_string(&ssd, "CEPEDI   TIC37", 8, 10); // Desenha uma string
-        ssd1306_draw_string(&ssd, "EMBARCATECH", 20, 30); // Desenha uma string
-        ssd1306_draw_string(&ssd, "JOAO VICTOR", 15, 48); // Desenha uma string      
-        ssd1306_send_data(&ssd); // Atualiza o display
-
-        sleep_ms(1000);
+        display_numeros(num);
+        if (stdio_usb_connected()) { // Certifica-se de que o USB está conectado
+            if (scanf(" %c", &c) == 1) { // Lê caractere da entrada padrão
+                ssd1306_draw_char(&ssd, c, 15, 48); // Desenha uma string      
+                ssd1306_send_data(&ssd); // Atualiza o display
+                if (c >= '0' && c <= '9') { // Verifica se é um número
+                    num = c - '0'; // Converte char para int
+                    printf("Recebido: '%c' -> Número: %d\n", c, num);
+                    display_numeros(num); // Atualiza a matriz de LEDs
+                }
+            }
+        }
+        sleep_ms(40); // Pausa para evitar uso excessivo da CPU
     }
     return 0;
 }
