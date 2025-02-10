@@ -43,7 +43,7 @@ int estado_led_azul = 0;
 ssd1306_t ssd;
 
 bool cor = true;
-char c = '0';
+char c = '\0';  // Nenhum caractere exibido inicialmente
 int num = 10;
 
 // Buffer para números na matriz (mantido como estava)
@@ -145,31 +145,41 @@ void display_numeros(int numero) {
 
 void display_estado_leds() {
     ssd1306_fill(&ssd, false);
+
+    // Estado do LED Verde
     if (estado_led_verde == 0) {
         ssd1306_draw_string(&ssd, "LED V   OFF", 15, 10);
     } else {
         ssd1306_draw_string(&ssd, "LED V   ON", 15, 10);
     }
-    
+
+    // Estado do LED Azul
     if (estado_led_azul == 0) {
         ssd1306_draw_string(&ssd, "LED A   OFF", 15, 20);
     } else {
         ssd1306_draw_string(&ssd, "LED A   ON", 15, 20);
     }
 
+    // Só exibe o caractere se um valor já foi digitado
+    if (c != '0') {
+        ssd1306_draw_char(&ssd, c, 60, 40);
+    }
+
+    // Atualiza o display
     ssd1306_send_data(&ssd);
-    
-    // Envia estado dos LEDs pela UART também
+
+    // Envia estado dos LEDs pela USB e UART
     printf("Estado LED Verde: %s, LED Azul: %s\n", 
            estado_led_verde == 0 ? "OFF" : "ON", 
            estado_led_azul == 0 ? "OFF" : "ON");
-    
-    // Envia pela UART
+
     uart_puts(UART_ID, "Estado LED Verde: ");
     uart_puts(UART_ID, estado_led_verde == 0 ? "OFF" : "ON");
     uart_puts(UART_ID, ", LED Azul: ");
     uart_puts(UART_ID, estado_led_azul == 0 ? "OFF\n" : "ON\n");
 }
+
+
 
 void gpio_irq_handler(uint gpio, uint32_t events) {
     uint32_t current_time = to_us_since_boot(get_absolute_time());
@@ -193,7 +203,6 @@ void process_received_char(char received_char) {
     c = received_char;
 
     // Redesenha apenas a parte do caractere, sem apagar os estados dos LEDs
-    ssd1306_draw_string(&ssd, " ", 15, 40);
     ssd1306_draw_char(&ssd, c, 60, 40);
     ssd1306_send_data(&ssd);
 
