@@ -13,7 +13,7 @@ Um vídeo demonstrativo foi produzido, contendo:
 - Apresentação do autor.
 - Explicação das funcionalidades implementadas.
 - Demonstração do projeto em funcionamento.
-- [Link para o vídeo](https://drive.google.com/file/d/1ye-VUXsxcI4JKlpr7O4Vb30_GMAE5QGZ/view?usp=drivesdk)
+- [Link para o vídeo](https://drive.google.com/file/d/1TaljXQkF0JyjNxz-ryjINCg8riBpKUrB)
 
 ## Objetivos
 - Compreender o funcionamento da comunicação serial (UART e I2C) em microcontroladores.
